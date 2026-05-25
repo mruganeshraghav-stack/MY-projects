@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Sign Interpreter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="camera-section">
+            <video id="cameraFeed" autoplay></video>
+        </div>
+        <div class="translation-section">
+            <h2 id="outputText">Waiting for detection...</h2>
+            <img id="processedImage" alt="Processed frame will appear here" style="margin-top:20px; border:2px solid #00ffff; border-radius:10px;"/>
+            <div class="waveform"></div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('cameraFeed');
+        const outputText = document.getElementById('outputText');
+        const processedImage = document.getElementById('processedImage');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing webcam: ", err);
+            });
+
+        function captureFrame() {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const dataURL = canvas.toDataURL('image/png');
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: dataURL })
+            })
+            .then(res => res.json())
+            .then(data => {
+                outputText.innerText = data.result || "Error detecting hand";
+                if (data.image) {
+                    processedImage.src = data.image;
+                }
+            });
+        }
+
+        setInterval(captureFrame, 2000);
+    </script>
+</body>
+</html>
