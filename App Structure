@@ -1,0 +1,13 @@
+sign_interpreter/
+│
+├── app.py
+├── venv/                 # virtual environment 
+│
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   └── images/
+│       └── background.png
+│
+└── templates/
+    └── index.html
